@@ -230,6 +230,7 @@ if ~(exist('rawEeg', 'var') & exist('Chs', 'var') & exist('nCh', 'var') & exist(
 end
 
 
+
 %% check for prior processing
 states = [];
 if FileExistsIn([baseName,'.eegstates.mat'])
@@ -614,12 +615,6 @@ else
     end
 end
 
-if eegFS>FO.downsampleGoal;
-    FO.downsample = round(eegFS/FO.downsampleGoal);
-else
-    FO.downsample = 1;
-end
-
 disp('So far so good. Now, loading StateEditor GUI. This is going to be great!');
 
 if supressGUI == 1
@@ -659,8 +654,7 @@ end
 
 
 for i = 1:nCh
-    FO.eeg{i} = eeg{i}(1:FO.downsample:end);
-%     FO.eeg{i} = (eeg{i}(1:FO.downsample:end)/2150)/1000;%why was this division?? To convert to volts in some old system?  
+    FO.eeg{i} = (eeg{i}(1:FO.downsample:end)/2150)/1000;
 end
 
 FO.clickPoint = [];
