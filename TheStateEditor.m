@@ -3029,7 +3029,7 @@ function Par = LoadParIn(FileName, varargin)
 %                    e.g. if .ElectrodeGroup{3} = [2 3 4 5], electrode 3
 %                    is a tetrode for channels 2 3 4 and 5. 
 % channel numbers here are from 0. be carefull.
-[SpecInfo] = DefaultArgs(varargin,{1});
+[SpecInfo] = DefaultArgsIn(varargin,{1});
 
 if ~isempty(strfind(FileName,'.par'))
     FileBase = FileName(1:strfind(FileName,'.par')-1);
@@ -5126,3 +5126,5 @@ else
 end
 
 end
+
+
