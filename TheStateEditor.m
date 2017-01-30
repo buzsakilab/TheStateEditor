@@ -3040,9 +3040,9 @@ else
 end
 
 
-if FileExists([FileBase '.xml']) %& ~isempty(strfind(FileName,'.xml'))
+if FileExistsIn([FileBase '.xml']) %& ~isempty(strfind(FileName,'.xml'))
     Par = LoadXml(FileBase);
-elseif FileExists([FileBase '.par'])
+elseif FileExistsIn([FileBase '.par'])
 
 
     % open file
@@ -3083,7 +3083,7 @@ else
 end
 
 if SpecInfo
-    if FileExists([FileBase '.eeg.par'])
+    if FileExistsIn([FileBase '.eeg.par'])
         if ~isfield(Par,'nElecGps')
             ParTmp = LoadPar([FileBase '.par']);
         else
