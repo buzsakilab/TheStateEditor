@@ -84,11 +84,15 @@
 % be useful for those wishing to pre-create the '.eegstates.mat' file as 
 % part of their data pre-processing.
 %
+% Dependency: Does require LoadXml.m from XmlTree
+% http://www.artefact.tk/software/matlab/xml/
+%
 %created by Andres Grosmark at Gyuri Buzsaki's lab, 12/2012.
 %Improvements by Brendon Watson
 %Many subfunctions, mostly from Anton Sirota, but also from Adrien Peyrache
 %and others have been included as subfunctions of this script to reduce
 %dependency issues.
+%
 
 
 
