@@ -98,7 +98,6 @@
 
 function TheStateEditor(baseName, inputData, supressGUI, makePortable)
 
-
 %% get baseName if doesn't exist, save
 
 if exist('inputData', 'var');
@@ -321,7 +320,11 @@ else
         
         
         annotation('textbox',  'Position', [0.02, 0.65, 0.9, 0.07], 'string', ['\bf\fontsize{10}Choose a motion signal to use:'], 'EdgeColor', 'none');
-        mOptions = 'None|Load From .whl file (head tracking)|Load from eeg ch(s) (accelerometer/motion pad)|Load from eeg ch(s) (MEG)|Load from TimeValue Pair .mat (_EMGCorr.mat)|Load from .mat file';
+        if exist([baseName '_EMGCorr.mat'],'file');
+            mOptions = {'Load from TimeValue Pair .mat (_EMGCorr.mat)';'None';'Load From .whl file (head tracking)';'Load from eeg ch(s) (accelerometer/motion pad)';'Load from eeg ch(s) (MEG)';'Load from .mat file'};
+        else
+            mOptions = {'None';'Load From .whl file (head tracking)';'Load from eeg ch(s) (accelerometer/motion pad)';'Load from eeg ch(s) (MEG)';'Load from TimeValue Pair .mat (_EMGCorr.mat)';'Load from .mat file'};
+        end
         mInput = uicontrol('style', 'popupmenu', 'string', mOptions );
         set(mInput, 'Units', 'normalized', 'Position', [0.37, 0.5, 0.62, 0.1]);
         
@@ -339,11 +342,10 @@ else
         
         uiwait(inputFig);
         Chs = get(Channels1, 'string');
-        mIn = get(mInput, 'Value');
+        mIn = mOptions{get(mInput, 'Value')};
         mChs = get(mChannels1, 'string');
         
-        
-        
+       
         clf(inputFig);
         close(inputFig);
         if answer1 == 0;
@@ -353,21 +355,20 @@ else
     if ischar(Chs)
         Chs = str2num(Chs);
     end
-    if exist('MotionType', 'var') & ~exist('mIn', 'var')
-        switch MotionType
-            case 'none'
-                mIn = 1;
-            case  'Whl'
-                mIn = 2;
-            case 'Channels (accelerometer)'
-                mIn = 3;
-            case 'Channels (MEG)'
-                mIn = 4';
-            case 'File'
-                mIn = 5;
-        end
-        
-    end
+%     if exist('MotionType', 'var') & ~exist('mIn', 'var')
+%         switch MotionType
+%             case 'none'
+%                 mIn = 1;
+%             case  'Whl'
+%                 mIn = 2;
+%             case 'Channels (accelerometer)'
+%                 mIn = 3;
+%             case 'Channels (MEG)'
+%                 mIn = 4';
+%             case 'File'
+%                 mIn = 5;
+%         end
+%     end
     
     
     if ~iscell(Chs)
@@ -452,7 +453,8 @@ else
         end
         
         
-        if mIn == 3
+        if strcmp(mIn,'Load from eeg ch(s) (accelerometer/motion pad)')
+        %         if mIn == 3
             if ischar(mChs)
                 mChs  = str2num(mChs);
             end
@@ -462,13 +464,14 @@ else
                 return;
             end
         end
+       
         
         MotionType = [];
         switch(mIn)
-            case 1
+            case 'None'
                 motion = [];
                 MotionType = 'none';
-            case 2
+            case 'Load From .whl file (head tracking)'
                 disp('Loading and preprocessing motion data from .whl file...');
                 motion = LoadFromWhl(baseName, fspec{1}.to);
                 if sum(isnan(motion)) ~= 0
@@ -478,7 +481,7 @@ else
                 MotionType = 'Whl';
                 mChs = [];
                 disp('Done.');
-            case 3
+            case 'Load from eeg ch(s) (accelerometer/motion pad)'
                 disp(['Loading and preprocessing motion data from channel(s) ', int2str(mChs), '...']);
                 if exist('motionSignal', 'var')
                     meeg = motionSignal;
@@ -507,7 +510,7 @@ else
                 end
                 MotionType = 'Channels (accelerometer)';
                 disp('Done.');
-            case 4
+            case 'Load from eeg ch(s) (MEG)'
                 disp(['Loading and preprocessing meg data from channel(s) ', int2str(mChs), '...']);
                 if exist('motionSignal', 'var')
                     meeg = motionSignal;
@@ -542,7 +545,7 @@ else
                 MotionType = 'Channels (MEG)';
                 disp('Done.');
                 
-            case 5
+            case 'Load from TimeValue Pair .mat (_EMGCorr.mat)'
                 MotionType = 'TimeVal';
                 varname = [];
 %                 b = msgbox(['Note: Motion vector must be 1xn where n is the number of time bins in seconds (n = ', int2str(length(fspec{1}.to)), ')']);
@@ -569,7 +572,7 @@ else
                     motion = LoadTimeStampValuePairs(tos,fullfile(path,name),varname);
                 end
                 
-            case 6
+            case 'Load from .mat file'
                 MotionType = 'File';
                 b = msgbox(['Note: Motion vector must be 1xn where n is the number of time bins in seconds (n = ', int2str(length(fspec{1}.to)), ')']);
                 uiwait(b);
@@ -4556,11 +4559,12 @@ end
 
 h = figure('position',[940 5 480 720]);
 
-ax1 = subplot(3,1,1);hold on;
+ax1 = subplot(3,1,1,'ButtonDownFcn',@ClickSetsLineXIn);hold on;
 bar(histsandthreshs.swhistbins,histsandthreshs.swhist)
-swline = imline(ax1,[histsandthreshs.swthresh histsandthreshs.swthresh],ylim(ax1));
-set(swline,'UserData','swline')
-id = addNewPositionCallback(swline,@(pos) title(mat2str(pos,3)));
+swline = plot(ax1,[histsandthreshs.swthresh histsandthreshs.swthresh],ylim(ax1),'tag','bw');
+% swline = imline(ax1,[histsandthreshs.swthresh histsandthreshs.swthresh],ylim(ax1));
+% set(swline,'UserData','swline')
+% id = addNewPositionCallback(swline,@(pos) title(mat2str(pos,3)));
 xlabel('SWS Band Power')
 ylabel('Counts (sec)')
 ResetToInitButton_sw = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.95, 0.15, 0.05]);
@@ -4568,11 +4572,14 @@ set(ResetToInitButton_sw,'Callback',@ResetToInitSw);
 ResetToOrigButton_sw = uicontrol('style', 'pushbutton', 'String', 'Orig', 'Units', 'normalized', 'Position',  [0.85, 0.9, 0.15, 0.05]);
 set(ResetToOrigButton_sw,'Callback',@ResetToOrigSw);
 
-ax2 = subplot(3,1,2);hold on;
+title('Click in plots to reset X value of thresholds')
+
+ax2 = subplot(3,1,2,'ButtonDownFcn',@ClickSetsLineXIn);hold on;
 bar(histsandthreshs.EMGhistbins,histsandthreshs.EMGhist)
-EMGline = imline(ax2,[histsandthreshs.EMGthresh histsandthreshs.EMGthresh],ylim(ax2));
-set(EMGline,'UserData','EMGline')
-id = addNewPositionCallback(EMGline,@(pos) title(mat2str(pos,3)));
+EMGline = plot(ax2,[histsandthreshs.EMGthresh histsandthreshs.EMGthresh],ylim(ax2),'tag','bw');
+% EMGline = imline(ax2,[histsandthreshs.EMGthresh histsandthreshs.EMGthresh],ylim(ax2));
+% set(EMGline,'UserData','EMGline')
+% id = addNewPositionCallback(EMGline,@(pos) title(mat2str(pos,3)));
 xlabel('EMG (300-600Hz Correlation)')
 ylabel('Counts (sec)')
 ResetToInitButton_EMG = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.62, 0.15, 0.05]);
@@ -4580,11 +4587,12 @@ set(ResetToInitButton_EMG,'Callback',@ResetToInitEMG);
 ResetToOrigButton_EMG = uicontrol('style', 'pushbutton', 'String', 'Orig', 'Units', 'normalized', 'Position',  [0.85, 0.57, 0.15, 0.05]);
 set(ResetToOrigButton_EMG,'Callback',@ResetToOrigEMG);
 
-ax3 = subplot(3,1,3);hold on;
+ax3 = subplot(3,1,3,'ButtonDownFcn',@ClickSetsLineXIn);hold on;
 bar(histsandthreshs.THhistbins,histsandthreshs.THhist)
-THline = imline(ax3,[histsandthreshs.THthresh histsandthreshs.THthresh],ylim(ax3));
-set(THline,'UserData','THline')
-id = addNewPositionCallback(THline,@(pos) title(mat2str(pos,3)));
+THline = plot(ax3,[histsandthreshs.THthresh histsandthreshs.THthresh],ylim(ax3),'tag','bw');
+% THline = imline(ax3,[histsandthreshs.THthresh histsandthreshs.THthresh],ylim(ax3));
+% set(THline,'UserData','THline')
+% id = addNewPositionCallback(THline,@(pos) title(mat2str(pos,3)));
 xlabel('Theta ratio (5-10Hz/2-15Hz)')
 ylabel('Counts (sec)')
 ResetToInitButton_TH = uicontrol('style', 'pushbutton', 'String', 'Init', 'Units', 'normalized', 'Position',  [0.85, 0.29, 0.15, 0.05]);
@@ -4615,6 +4623,16 @@ end
 % guidata(FO.fig,FO)
 
 end
+
+
+function ClickSetsLineXIn(obj,ev)
+cp = get(obj,'CurrentPoint');
+newx = cp(1);
+lo = findobj('parent',obj,'type','line','tag','bw');
+set(lo,'XData',[newx newx])
+
+end
+
 
 function histsandthreshs = SSHistogramsAndThresholds_In(baseName)
 % Get initial histograms and thresholds as calculated by Dan's code
@@ -4708,37 +4726,11 @@ histsandthreshs = v2struct(swhist,swhistbins,swthresh,EMGhist,EMGhistbins,EMGthr
 end
 
 
-% function badtimes = GetBadTimes_In(baseName)
-% 
-% load([baseName '_StateScoreLFP.mat'],'swLFP','sf_LFP')
-% 
-% if sf_LFP == 1250
-%     downsamplefactor = 5;
-% else
-%     display('sf not 1250... if only you made this able to set its own downsample...')
-%     downsamplefactor = 2;
-% end
-% swLFP = downsample(swLFP,downsamplefactor);
-% 
-% freqlist = logspace(0,2,100);
-% %freqlist = linspace(0.5,55.5,111);
-% window = 10;
-% noverlap = 9;
-% window = window*sf_LFP;
-% noverlap = noverlap*sf_LFP;
-% [FFTspec,FFTfreqs,t_FFT] = spectrogram(swLFP,window,noverlap,freqlist,sf_LFP);
-% FFTspec = abs(FFTspec);
-% [zFFTspec,mu,sig] = zscore(log10(FFTspec)');
-% 
-%     %% Remove transients before calculating SW histogram
-%     %this should be it's own whole section - removing/detecting transients
-% totz = zscore(abs(sum(zFFTspec')));
-% badtimes = find(totz>5);
-
 function [states,StateIntervals] = ReClusterStates_In(obj,ev)
 % Recluster based on Dan Levenstein's state clustering... as in Watson 2016
 % and further developed by D Levenstein
 % Code here is based on Dan's code as of July 6, 2016
+% git repository at https://github.com/dlevenstein/Sleep-State-Score/blob/master/ClusterStates.m
 
 obj = findobj('tag','StateEditorMaster');
 FO = guidata(obj(end));
@@ -4748,11 +4740,11 @@ baseName = FO.baseName;
 % swthresh = FO.histsandthreshs.swthresh;
 % EMGthresh = FO.histsandthreshs.EMGthresh;
 % THthresh = FO.histsandthreshs.THthresh;
-swthresh = getPosition(FO.AutoClusterFig.swline);
+swthresh = get(FO.AutoClusterFig.swline,'XData');
 swthresh = swthresh(1,1);
-EMGthresh = getPosition(FO.AutoClusterFig.EMGline);
+EMGthresh = get(FO.AutoClusterFig.EMGline,'XData');
 EMGthresh = EMGthresh(1,1);
-THthresh = getPosition(FO.AutoClusterFig.THline);
+THthresh = get(FO.AutoClusterFig.THline,'XData');
 THthresh = THthresh(1,1);
 FO.histsandthreshs.swthresh = swthresh;
 FO.histsandthreshs.EMGthresh = EMGthresh;
@@ -4973,7 +4965,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.histsandthreshs_orig.swhist)];
 x = [FO.histsandthreshs_orig.swthresh FO.histsandthreshs_orig.swthresh];
-setPosition(FO.AutoClusterFig.swline,x,y);
+set(FO.AutoClusterFig.swline,'XData',x);
 end
 
 function ResetToOrigEMG(obj,ev)
@@ -4982,7 +4974,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.histsandthreshs_orig.EMGhist)];
 x = [FO.histsandthreshs_orig.EMGthresh FO.histsandthreshs_orig.EMGthresh];
-setPosition(FO.AutoClusterFig.EMGline,x,y);
+set(FO.AutoClusterFig.EMGline,'XData',x);
 end
 
 function ResetToOrigTH(obj,ev)
@@ -4991,7 +4983,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.histsandthreshs_orig.THhist)];
 x = [FO.histsandthreshs_orig.THthresh FO.histsandthreshs_orig.THthresh];
-setPosition(FO.AutoClusterFig.THline,x,y);
+set(FO.AutoClusterFig.THline,'XData',x);
 end
 
 function ResetToInitSw(obj,ev)
@@ -5000,7 +4992,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.AutoClusterFig.histsandthreshs_init.swhist)];
 x = [FO.AutoClusterFig.histsandthreshs_init.swthresh FO.AutoClusterFig.histsandthreshs_init.swthresh];
-setPosition(FO.AutoClusterFig.swline,x,y);
+set(FO.AutoClusterFig.swline,'XData',x);
 end
 
 function ResetToInitEMG(obj,ev)
@@ -5009,7 +5001,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.AutoClusterFig.histsandthreshs_init.EMGhist)];
 x = [FO.AutoClusterFig.histsandthreshs_init.EMGthresh FO.AutoClusterFig.histsandthreshs_init.EMGthresh];
-setPosition(FO.AutoClusterFig.EMGline,x,y);
+set(FO.AutoClusterFig.EMGline,'XData',x);
 end
 
 function ResetToInitTH(obj,ev)
@@ -5018,7 +5010,7 @@ FO = guidata(obj(end));
 baseName = FO.baseName;
 y = [0 max(FO.AutoClusterFig.histsandthreshs_init.THhist)];
 x = [FO.AutoClusterFig.histsandthreshs_init.THthresh FO.AutoClusterFig.histsandthreshs_init.THthresh];
-setPosition(FO.AutoClusterFig.THline,x,y);
+set(FO.AutoClusterFig.THline,'XData',x);
 end
 
 function [ INT ] = IDXtoINT_In( IDX ,numstates)
