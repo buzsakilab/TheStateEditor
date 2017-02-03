@@ -307,7 +307,7 @@ else
         if exist([baseName '_SleepScoreLFP.mat'],'file')
             load([baseName '_SleepScoreLFP.mat'],'SWchannum')
             load([baseName '_SleepScoreLFP.mat'],'THchannum')
-            defaultchans = [num2str(SWchannum+1),',',num2str(THchannum+1)];
+            defaultchans = [num2str(SWchannum),',',num2str(THchannum)];
         else
             defaultchans = '';
         end
