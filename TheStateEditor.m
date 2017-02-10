@@ -245,7 +245,12 @@ if FileExistsIn([baseName,'.eegstates.mat'])
     else
         if ~exist('rawEeg', 'var')
             rawEeg = {};
-            eegFS = StateInfo.eegFS;%this was missing and caused probs with default 1250Hz assumption if data not at 1250hz
+            if isfield(StateInfo,'eegFS')
+                eegFS = StateInfo.eegFS;%this was missing and caused probs with default 1250Hz assumption if data not at 1250hz
+            else %allows compatibility with old files...
+                eegFS = 1250;
+                StateInfo.eegFS = eegFS;%...should fix them too
+            end
             Chs = StateInfo.Chs;
             nCh = StateInfo.nCh;
             disp([baseName, '.eegstates.mat loaded']);
